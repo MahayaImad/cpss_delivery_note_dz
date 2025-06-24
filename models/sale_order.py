@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 
 
 class SaleOrder(models.Model):
@@ -32,23 +33,37 @@ class SaleOrder(models.Model):
     def _compute_delivery_note_count(self):
         """Calcule le nombre de BL générés"""
         for order in self:
-            # Compter les pickings sortants avec un numéro BL
-            delivery_notes = order.picking_ids.filtered(
-                lambda p: p.picking_type_code == 'outgoing' and p.delivery_note_number
-            )
-            order.delivery_note_count = len(delivery_notes)
+            # Vérifier que picking_ids existe
+            if hasattr(order, 'picking_ids'):
+                # Compter les pickings sortants avec un numéro BL
+                delivery_notes = order.picking_ids.filtered(
+                    lambda p: p.picking_type_code == 'outgoing' and
+                              hasattr(p, 'delivery_note_number') and
+                              p.delivery_note_number
+                )
+                order.delivery_note_count = len(delivery_notes)
+            else:
+                order.delivery_note_count = 0
 
     @api.depends('picking_ids.delivery_note_number', 'picking_ids.state')
     def _compute_delivery_note_status(self):
         """Calcule l'état global des BL"""
         for order in self:
+            # Vérifier que picking_ids existe (relation avec stock)
+            if not hasattr(order, 'picking_ids'):
+                order.delivery_note_status = 'none'
+                continue
+
             pickings = order.picking_ids.filtered(lambda p: p.picking_type_code == 'outgoing')
 
             if not pickings:
                 order.delivery_note_status = 'none'
                 continue
 
-            bl_pickings = pickings.filtered(lambda p: p.delivery_note_number)
+            # Vérifier que delivery_note_number existe sur les pickings
+            bl_pickings = pickings.filtered(
+                lambda p: hasattr(p, 'delivery_note_number') and p.delivery_note_number
+            )
 
             if not bl_pickings:
                 order.delivery_note_status = 'none'
@@ -61,6 +76,11 @@ class SaleOrder(models.Model):
     def _compute_payment_state_computed(self):
         """Calcule l'état de paiement depuis les factures pour Odoo 16"""
         for order in self:
+            # Vérifier que invoice_ids existe
+            if not hasattr(order, 'invoice_ids'):
+                order.payment_state_computed = 'not_paid'
+                continue
+
             invoices = order.invoice_ids.filtered(
                 lambda inv: inv.move_type == 'out_invoice' and inv.state == 'posted'
             )
@@ -92,9 +112,15 @@ class SaleOrder(models.Model):
         """Ouvre la vue des bons de livraison de cette commande"""
         self.ensure_one()
 
+        # Vérifier que picking_ids existe
+        if not hasattr(self, 'picking_ids'):
+            raise UserError(_("Ce module nécessite le module Stock pour fonctionner."))
+
         # Récupérer les pickings avec BL
         delivery_pickings = self.picking_ids.filtered(
-            lambda p: p.picking_type_code == 'outgoing' and p.delivery_note_number
+            lambda p: p.picking_type_code == 'outgoing' and
+                      hasattr(p, 'delivery_note_number') and
+                      p.delivery_note_number
         )
 
         action = {
@@ -126,6 +152,10 @@ class SaleOrder(models.Model):
 
         if self.state not in ['sale', 'done']:
             raise UserError(_("Impossible de créer un BL pour une commande non confirmée."))
+
+        # Vérifier que picking_ids existe
+        if not hasattr(self, 'picking_ids'):
+            raise UserError(_("Ce module nécessite le module Stock pour fonctionner."))
 
         # Vérifier s'il y a des pickings en attente
         pending_pickings = self.picking_ids.filtered(
@@ -159,7 +189,7 @@ class SaleOrderLine(models.Model):
         for line in self:
             qty = 0.0
             # Vérifier que move_ids existe et est accessible
-            if hasattr(line, 'move_ids'):
+            if hasattr(line, 'move_ids') and line.move_ids:
                 for move in line.move_ids:
                     if (hasattr(move, 'picking_id') and
                             move.picking_id and

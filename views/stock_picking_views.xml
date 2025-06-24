@@ -20,10 +20,37 @@
             <!-- Champs après partner_id -->
             <field name="partner_id" position="after">
                 <field name="delivery_note_number"/>
+                <field name="delivery_note_date"/>
                 <field name="is_delivery_note_printed"/>
             </field>
 
         </field>
     </record>
+
+    <!-- Action simple pour les bons de livraison -->
+    <record id="action_delivery_notes" model="ir.actions.act_window">
+        <field name="name">Bons de Livraison</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('picking_type_code', '=', 'outgoing'), ('delivery_note_number', '!=', False)]</field>
+        <field name="context">{
+            'default_picking_type_code': 'outgoing'
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Créer votre premier bon de livraison !
+            </p>
+            <p>
+                Les bons de livraison sont générés depuis les livraisons de commandes de vente.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_delivery_notes"
+              name="Bons de Livraison"
+              parent="sale.sale_menu_root"
+              action="action_delivery_notes"
+              sequence="99"
+              groups="stock.group_stock_user"/>
 
 </odoo>

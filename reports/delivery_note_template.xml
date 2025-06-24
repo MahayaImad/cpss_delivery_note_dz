@@ -72,20 +72,23 @@
                         <!-- Informations du document -->
                         <div class="row" style="margin-bottom: 20px; background-color: #f5f5f5; padding: 15px;">
                             <div class="col-6">
-                                <strong>Date BL:</strong> <span t-field="o.delivery_note_date" t-options="{'widget': 'date'}"/><br/>
-                                <strong>Date Livraison:</strong> <span t-field="o.scheduled_date" t-options="{'widget': 'date'}"/><br/>
+                                <strong>Date BL:</strong>
+                                <span t-field="o.delivery_note_date" t-options="{'widget': 'date'}"/><br/>
+                                <strong>Date Livraison:</strong>
+                                <span t-field="o.scheduled_date" t-options="{'widget': 'date'}"/><br/>
                                 <t t-if="o.sale_id">
                                     <strong>Commande:</strong> <span t-field="o.sale_id.name"/><br/>
-                                    <strong>Date Commande:</strong> <span t-field="o.sale_id.date_order" t-options="{'widget': 'date'}"/>
+                                    <strong>Date Commande:</strong>
+                                    <span t-field="o.sale_id.date_order" t-options="{'widget': 'date'}"/>
                                 </t>
                             </div>
                             <div class="col-6">
                                 <strong>Responsable:</strong> <span t-field="o.user_id.name"/><br/>
-                                <strong>Mode de Livraison:</strong> <span t-field="o.carrier_id.name" t-if="o.carrier_id"/><br/>
+                                <strong>Origine:</strong> <span t-field="o.origin"/><br/>
                                 <strong>État:</strong>
                                 <span t-if="o.state == 'done'" style="color: green;">✓ Livré</span>
                                 <span t-elif="o.state == 'cancel'" style="color: red;">✗ Annulé</span>
-                                <span t-else="o.state" style="color: orange;">⏳ En cours</span>
+                                <span t-else="" style="color: orange;">⏳ En cours</span>
                             </div>
                         </div>
 
@@ -130,13 +133,26 @@
                                             <strong t-esc="'{:,.2f}'.format(qty_delivered)"/>
                                         </td>
                                         <td style="border: 1px solid #000; padding: 5px; text-align: right;">
-                                            <span t-esc="'{:,.2f}'.format(move.price_unit)"/>
+                                            <t t-if="move.sale_line_id and move.sale_line_id.price_unit">
+                                                <span t-esc="'{:,.2f}'.format(move.sale_line_id.price_unit)"/>
+                                            </t>
+                                            <t t-else="">
+                                                <span t-esc="'{:,.2f}'.format(move.product_id.list_price or 0.0)"/>
+                                            </t>
                                         </td>
                                         <td style="border: 1px solid #000; padding: 5px; text-align: center;">
-                                            <span t-esc="'{:.1f}'.format(move.discount)"/>%
+                                            <t t-if="move.sale_line_id and move.sale_line_id.discount">
+                                                <span t-esc="'{:.1f}'.format(move.sale_line_id.discount)"/>%
+                                            </t>
+                                            <t t-else="">
+                                                0.0%
+                                            </t>
                                         </td>
                                         <td style="border: 1px solid #000; padding: 5px; text-align: right;">
-                                            <strong t-esc="'{:,.2f}'.format(move.price_subtotal)"/>
+                                            <t t-set="line_price" t-value="move.sale_line_id.price_unit if move.sale_line_id else move.product_id.list_price or 0.0"/>
+                                            <t t-set="line_discount" t-value="move.sale_line_id.discount if move.sale_line_id else 0.0"/>
+                                            <t t-set="line_total" t-value="qty_delivered * line_price * (1 - line_discount / 100.0)"/>
+                                            <strong t-esc="'{:,.2f}'.format(line_total)"/>
                                         </td>
                                     </t>
                                 </tr>
@@ -166,7 +182,12 @@
                                             <strong>MONTANT HT</strong>
                                         </td>
                                         <td style="border: 1px solid #000; padding: 8px; text-align: right;">
-                                            <strong t-esc="'{:,.2f} DA'.format(o.amount_untaxed)"/>
+                                            <t t-if="o.sale_id and o.sale_id.amount_untaxed">
+                                                <strong t-esc="'{:,.2f} DA'.format(o.sale_id.amount_untaxed)"/>
+                                            </t>
+                                            <t t-else="">
+                                                <strong>0,00 DA</strong>
+                                            </t>
                                         </td>
                                     </tr>
                                     <tr>
@@ -174,7 +195,12 @@
                                             <strong>TVA</strong>
                                         </td>
                                         <td style="border: 1px solid #000; padding: 8px; text-align: right;">
-                                            <strong t-esc="'{:,.2f} DA'.format(o.amount_tax)"/>
+                                            <t t-if="o.sale_id and o.sale_id.amount_tax">
+                                                <strong t-esc="'{:,.2f} DA'.format(o.sale_id.amount_tax)"/>
+                                            </t>
+                                            <t t-else="">
+                                                <strong>0,00 DA</strong>
+                                            </t>
                                         </td>
                                     </tr>
                                     <tr style="background-color: #2e7d32; color: white;">
@@ -182,24 +208,25 @@
                                             <strong>TOTAL TTC</strong>
                                         </td>
                                         <td style="border: 1px solid #000; padding: 8px; text-align: right;">
-                                            <strong t-esc="'{:,.2f} DA'.format(o.amount_total)"/>
+                                            <t t-if="o.sale_id and o.sale_id.amount_total">
+                                                <strong t-esc="'{:,.2f} DA'.format(o.sale_id.amount_total)"/>
+                                            </t>
+                                            <t t-else="">
+                                                <strong>0,00 DA</strong>
+                                            </t>
                                         </td>
                                     </tr>
                                 </table>
 
-                                <!-- États financiers -->
+                                <!-- États simplifiés -->
                                 <div style="margin-top: 10px; padding: 8px; border: 1px solid #000; background-color: #f9f9f9;">
                                     <small>
-                                        <strong>État Facturation:</strong>
-                                        <span t-if="o.sale_invoice_status == 'invoiced'" style="color: green;">✓ Facturé</span>
-                                        <span t-elif="o.sale_invoice_status == 'to invoice'" style="color: orange;">⏳ À Facturer</span>
-                                        <span t-else="o.sale_invoice_status" style="color: red;">✗ Non Facturé</span>
+                                        <strong>Commande:</strong>
+                                        <span t-if="o.sale_id" t-field="o.sale_id.name"/>
+                                        <span t-else="">N/A</span>
                                         <br/>
-                                        <strong>État Paiement:</strong>
-                                        <span t-if="o.sale_payment_state == 'paid'" style="color: green;">✓ Payé</span>
-                                        <span t-elif="o.sale_payment_state == 'partial'" style="color: orange;">⏳ Partiel</span>
-                                        <span t-elif="o.sale_payment_state == 'in_payment'" style="color: orange;">⏳ En Cours</span>
-                                        <span t-else="o.sale_payment_state" style="color: red;">✗ Non Payé</span>
+                                        <strong>Date BL:</strong>
+                                        <span t-field="o.delivery_note_date" t-options="{'widget': 'date'}"/>
                                     </small>
                                 </div>
                             </div>

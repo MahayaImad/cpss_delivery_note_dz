@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPSS - Bon de Livraison Algérie</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            text-align: center;
+            padding: 60px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="1" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="1" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            animation: float 20s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translateX(-100px) translateY(-100px); }
+            100% { transform: translateX(100px) translateY(100px); }
+        }
+        
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .flag-icon {
+            display: inline-block;
+            width: 40px;
+            height: 25px;
+            background: linear-gradient(to right, #00843d 33%, white 33%, white 66%, #ce1126 66%);
+            border-radius: 3px;
+            margin-left: 10px;
+            vertical-align: middle;
+            position: relative;
+        }
+        
+        .flag-icon::after {
+            content: '☪';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #ce1126;
+            font-size: 12px;
+        }
+        
+        .content {
+            padding: 0;
+        }
+        
+        .section {
+            padding: 60px 40px;
+            position: relative;
+        }
+        
+        .section:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .section-title {
+            font-size: 2.5em;
+            color: #2e7d32;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background: #4caf50;
+            margin: 15px auto;
+            border-radius: 2px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .feature-card h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .steps-timeline {
+            position: relative;
+            margin: 50px 0;
+        }
+        
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, #4caf50, #2e7d32);
+            transform: translateX(-50%);
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 40px 0;
+            position: relative;
+        }
+        
+        .step:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+        
+        .step-content {
+            flex: 1;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin: 0 40px;
+            position: relative;
+        }
+        
+        .step-number {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: #4caf50;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            z-index: 2;
+            border: 4px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .step h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .tech-specs {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 60px 40px;
+        }
+        
+        .tech-specs h2 {
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        
+        .tech-item {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .tech-item h4 {
+            color: #81c784;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .tech-item ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .tech-item li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .tech-item li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #81c784;
+            font-weight: bold;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            text-align: center;
+            padding: 80px 40px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #ff6b6b;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-top: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        
+        .footer {
+            background: #1a1a1a;
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .footer p {
+            margin: 10px 0;
+        }
+        
+        .footer .company-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4caf50;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin: 5px;
+        }
+        
+        .phase-indicator {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .section {
+                padding: 40px 20px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .step {
+                flex-direction: column !important;
+            }
+            
+            .step:nth-child(even) {
+                flex-direction: column !important;
+            }
+            
+            .timeline-line {
+                display: none;
+            }
+            
+            .step-number {
+                position: relative;
+                margin-bottom: 20px;
+            }
+            
+            .step-content {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🚚 Bon de Livraison Algérie <span class="flag-icon"></span></h1>
+            <p>Solution professionnelle pour la gestion des bons de livraison conformes au context du marché algérien</p>
+        </header>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Introduction -->
+            <section class="section">
+                <h2 class="section-title">📋 Pourquoi ce module ?</h2>
+                <p style="text-align: center; font-size: 1.2em; color: #666; max-width: 800px; margin: 0 auto;">
+                    En Algérie, le <strong>bon de livraison</strong> est un document réglementaire obligatoire qui doit accompagner 
+                    toute marchandise livrée. Notre module CPSS vous permet de générer des BL professionnels, 
+                    conformes à la législation, avec une numérotation automatique et un suivi complet.
+                </p>
+            </section>
+
+            <!-- Features -->
+            <section class="section">
+                <h2 class="section-title">🎯 Fonctionnalités</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">🔢</span>
+                        <h3>Numérotation Automatique</h3>
+                        <p>Génération automatique des numéros BL au format <strong>BL/YYYY/XXXXX</strong> conforme aux standards algériens.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <span class="feature-icon">💰</span>
+                        <h3>Calculs Précis</h3>
+                        <p>Montants calculés automatiquement sur les <strong>quantités réellement livrées</strong>, pas commandées.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <span class="feature-icon">📊</span>
+                        <h3>Suivi Complet</h3>
+                        <p>États d'impression, facturation et paiement pour un <strong>suivi optimal</strong> de vos livraisons.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <span class="feature-icon">🔗</span>
+                        <h3>Intégration Parfaite</h3>
+                        <p>Intégré nativement avec les <strong>commandes de vente</strong> et les livraisons Odoo.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <span class="feature-icon">📄</span>
+                        <h3>PDF Professionnel</h3>
+                        <p>Rapport PDF <strong>conforme à la réglementation</strong> avec zones de signature obligatoires.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <span class="feature-icon">🎛️</span>
+                        <h3>Filtres Avancés</h3>
+                        <p>Recherche par état : <strong>BL non facturés, non payés, imprimés</strong>, etc.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Phase indicator -->
+            <section class="section">
+                <div style="text-align: center;">
+                    <h3>🚀 Évolution du Module</h3>
+                    <p>
+                        <span class="badge">✅ Phase 1 - Terminée</span>
+                        <span class="badge" style="background: #ff9800;">🔄 Phase 2 - En développement</span>
+                    </p>
+                    <div style="margin-top: 30px;">
+                        <h4 style="color: #2e7d32;">Phase 1 (Actuelle) :</h4>
+                        <p>BL depuis commandes de vente avec suivi complet</p>
+                        
+                        <h4 style="color: #ff9800; margin-top: 20px;">Phase 2 (Prochainement) :</h4>
+                        <p>BL autonomes + Paiement direct + Rapports clients avancés</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How it works -->
+            <section class="section">
+                <h2 class="section-title">⚙️ Comment ça marche ?</h2>
+                <div class="steps-timeline">
+                    <div class="timeline-line"></div>
+                    
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>📝 Commande de Vente</h3>
+                            <p>Créez votre commande de vente normalement dans Odoo. Le module s'intègre parfaitement avec le processus existant.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>📦 Préparation Livraison</h3>
+                            <p>Confirmez les quantités à livrer dans le picking. Le module calculera automatiquement les montants basés sur les quantités réelles.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>🚚 Génération BL</h3>
+                            <p>Cliquez sur "Générer BL" pour créer automatiquement le numéro et marquer le document comme imprimé.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>🖨️ Impression PDF</h3>
+                            <p>Imprimez le bon de livraison professionnel conforme au context du marché algérien avec toutes les informations requises.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h3>📊 Suivi et Rapports</h3>
+                            <p>Suivez vos BL via le menu dédié avec des filtres avancés pour identifier les documents non facturés, non payés, etc.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Technical specs -->
+            <div class="tech-specs">
+                <h2>🔧 Spécifications Techniques</h2>
+                <div class="tech-grid">
+                    <div class="tech-item">
+                        <h4>Compatibilité</h4>
+                        <ul>
+                            <li>Odoo 16.0</li>
+                            <li>Python 3.11.7</li>
+                            <li>Tous environnements</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-item">
+                        <h4>Dépendances</h4>
+                        <ul>
+                            <li>Module Sale</li>
+                            <li>Module Stock</li>
+                            <li>Module Account</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-item">
+                        <h4>Fonctionnalités</h4>
+                        <ul>
+                            <li>Séquences automatiques</li>
+                            <li>Calculs financiers</li>
+                            <li>Rapports PDF</li>
+                            <li>Filtres avancés</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-item">
+                        <h4>Sécurité</h4>
+                        <ul>
+                            <li>Groupes utilisateur/manager</li>
+                            <li>Permissions granulaires</li>
+                            <li>Traçabilité complète</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <section class="cta-section">
+                <h2>🚀 Prêt à optimiser vos livraisons ?</h2>
+                <p style="font-size: 1.2em; margin: 20px 0;">
+                    Installez le module CPSS Bon de Livraison Algérie et bénéficiez d'une solution 
+                    professionnelle conforme au context du marché algérien.
+                </p>
+                <a href="#" class="cta-button">📥 Installer maintenant</a>
+            </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="company-name">CPSS</div>
+            <p>Développement spécialisé pour le marché algérien</p>
+            <p>📧 support@cpss.dz | 🌐 www.cpss.dz</p>
+            <p style="margin-top: 20px; color: #888;">
+                © 2025 CPSS. Module développé avec ❤️ pour la communauté Odoo Algérie
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

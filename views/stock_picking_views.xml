@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Extension du formulaire stock.picking -->
+    <record id="view_picking_form_bl" model="ir.ui.view">
+        <field name="name">stock.picking.form.bl</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Bouton dans header -->
+            <button name="button_validate" position="after">
+                <button name="action_generate_delivery_note"
+                        type="object"
+                        string="Générer BL"
+                        class="btn-primary"
+                        attrs="{'invisible': ['|', ('picking_type_code', '!=', 'outgoing'), ('delivery_note_number', '!=', False)]}"/>
+            </button>
+
+            <!-- Champs après partner_id -->
+            <field name="partner_id" position="after">
+                <field name="delivery_note_number"/>
+                <field name="is_delivery_note_printed"/>
+            </field>
+
+        </field>
+    </record>
+
+</odoo>

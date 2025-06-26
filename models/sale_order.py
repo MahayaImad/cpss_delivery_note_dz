@@ -7,11 +7,11 @@ from odoo.exceptions import UserError
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    # Compteur des bons de livraison
+    # Compteur des bons de livraison (basé sur les livraisons validées)
     delivery_note_count = fields.Integer(
         string='Nb. Bons de Livraison',
         compute='_compute_delivery_note_count',
-        help="Nombre de bons de livraison générés pour cette commande"
+        help="Nombre de livraisons validées pour cette commande"
     )
 
     # État global des BL
@@ -29,23 +29,21 @@ class SaleOrder(models.Model):
         ('partial', 'Partiel'),
     ], string='État Paiement', compute='_compute_payment_state_computed', store=True)
 
-    @api.depends('picking_ids.delivery_note_number')
+    @api.depends('picking_ids.state')
     def _compute_delivery_note_count(self):
-        """Calcule le nombre de BL générés"""
+        """Calcule le nombre de livraisons validées (BL)"""
         for order in self:
             # Vérifier que picking_ids existe
             if hasattr(order, 'picking_ids'):
-                # Compter les pickings sortants avec un numéro BL
+                # Compter les pickings sortants validés
                 delivery_notes = order.picking_ids.filtered(
-                    lambda p: p.picking_type_code == 'outgoing' and
-                              hasattr(p, 'delivery_note_number') and
-                              p.delivery_note_number
+                    lambda p: p.picking_type_code == 'outgoing' and p.state == 'done'
                 )
                 order.delivery_note_count = len(delivery_notes)
             else:
                 order.delivery_note_count = 0
 
-    @api.depends('picking_ids.delivery_note_number', 'picking_ids.state')
+    @api.depends('picking_ids.state')
     def _compute_delivery_note_status(self):
         """Calcule l'état global des BL"""
         for order in self:
@@ -60,14 +58,12 @@ class SaleOrder(models.Model):
                 order.delivery_note_status = 'none'
                 continue
 
-            # Vérifier que delivery_note_number existe sur les pickings
-            bl_pickings = pickings.filtered(
-                lambda p: hasattr(p, 'delivery_note_number') and p.delivery_note_number
-            )
+            # Compter les pickings validés
+            done_pickings = pickings.filtered(lambda p: p.state == 'done')
 
-            if not bl_pickings:
+            if not done_pickings:
                 order.delivery_note_status = 'none'
-            elif len(bl_pickings) == len(pickings.filtered(lambda p: p.state == 'done')):
+            elif len(done_pickings) == len(pickings):
                 order.delivery_note_status = 'done'
             else:
                 order.delivery_note_status = 'partial'
@@ -116,11 +112,9 @@ class SaleOrder(models.Model):
         if not hasattr(self, 'picking_ids'):
             raise UserError(_("Ce module nécessite le module Stock pour fonctionner."))
 
-        # Récupérer les pickings avec BL
+        # Récupérer les pickings validés (BL)
         delivery_pickings = self.picking_ids.filtered(
-            lambda p: p.picking_type_code == 'outgoing' and
-                      hasattr(p, 'delivery_note_number') and
-                      p.delivery_note_number
+            lambda p: p.picking_type_code == 'outgoing' and p.state == 'done'
         )
 
         action = {
@@ -132,7 +126,6 @@ class SaleOrder(models.Model):
             'context': {
                 'default_partner_id': self.partner_id.id,
                 'default_sale_id': self.id,
-                'search_default_delivery_notes': 1,
             }
         }
 
@@ -147,11 +140,11 @@ class SaleOrder(models.Model):
         return action
 
     def action_create_delivery_note(self):
-        """Créer un nouveau bon de livraison depuis la commande"""
+        """Créer une livraison depuis la commande (process standard)"""
         self.ensure_one()
 
         if self.state not in ['sale', 'done']:
-            raise UserError(_("Impossible de créer un BL pour une commande non confirmée."))
+            raise UserError(_("Impossible de créer une livraison pour une commande non confirmée."))
 
         # Vérifier que picking_ids existe
         if not hasattr(self, 'picking_ids'):
@@ -164,28 +157,41 @@ class SaleOrder(models.Model):
         )
 
         if not pending_pickings:
-            raise UserError(_("Aucune livraison en attente pour cette commande."))
+            # Pas de picking en attente, utiliser le process standard Odoo
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Information',
+                    'message': 'Utilisez le bouton "Livraison" standard pour créer une livraison.',
+                    'type': 'info',
+                }
+            }
 
-        # Prendre le premier picking disponible
+        # Rediriger vers le premier picking disponible
         picking = pending_pickings[0]
-
-        # Rediriger vers la génération du BL
-        return picking.action_generate_delivery_note()
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'stock.picking',
+            'view_mode': 'form',
+            'res_id': picking.id,
+            'target': 'current',
+        }
 
 
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    # Quantité total livrée avec BL
+    # Quantité totale livrée avec BL
     qty_delivered_bl = fields.Float(
         string='Qté Livrée (BL)',
         compute='_compute_qty_delivered_bl',
-        help="Quantité totale livrée avec bon de livraison"
+        help="Quantité totale livrée dans les livraisons validées"
     )
 
-    @api.depends('move_ids.quantity_done', 'move_ids.picking_id.delivery_note_number')
+    @api.depends('move_ids.quantity_done', 'move_ids.picking_id.state')
     def _compute_qty_delivered_bl(self):
-        """Calcule la quantité livrée avec BL uniquement"""
+        """Calcule la quantité livrée dans les BL (livraisons validées)"""
         for line in self:
             qty = 0.0
             # Vérifier que move_ids existe et est accessible
@@ -193,9 +199,8 @@ class SaleOrderLine(models.Model):
                 for move in line.move_ids:
                     if (hasattr(move, 'picking_id') and
                             move.picking_id and
-                            hasattr(move.picking_id, 'delivery_note_number') and
-                            move.picking_id.delivery_note_number and
                             move.picking_id.picking_type_code == 'outgoing' and
+                            move.picking_id.state == 'done' and
                             move.state == 'done'):
                         qty += move.quantity_done or 0
             line.qty_delivered_bl = qty

@@ -36,7 +36,7 @@ Développé spécialement pour le marché algérien.
     ],
     'data': [
         'security/ir.model.access.csv',
-        'data/sequence_data.xml',
+        #'data/sequence_data.xml',
         'views/stock_picking_views.xml',
         'views/sale_order_views.xml',
         'reports/delivery_note_report.xml',

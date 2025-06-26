@@ -1,29 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Vue formulaire sale.order avec BL -->
-    <record id="view_order_form_delivery_note" model="ir.ui.view">
-        <field name="name">sale.order.form.delivery.note</field>
+    <!-- Vue formulaire sale.order avec BL simplifiée -->
+    <record id="view_order_form_delivery_note_simplified" model="ir.ui.view">
+        <field name="name">sale.order.form.delivery.note.simplified</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-
-            <!-- Ajouter bouton BL dans le header -->
-            <button name="action_confirm" position="after">
-                <button name="action_view_delivery_notes"
-                        type="object"
-                        string="Bons de Livraison"
-                        class="btn-secondary"
-                        attrs="{'invisible': [('delivery_note_count', '=', 0)]}"
-                        groups="stock.group_stock_user"/>
-
-                <button name="action_create_delivery_note"
-                        type="object"
-                        string="Créer BL"
-                        class="btn-primary"
-                        attrs="{'invisible': [('state', 'not in', ['sale', 'done'])]}"
-                        groups="stock.group_stock_user"/>
-            </button>
 
             <!-- Ajouter smart button pour les BL -->
             <div name="button_box" position="inside">
@@ -53,8 +36,8 @@
     </record>
 
     <!-- Vue liste sale.order avec colonnes BL -->
-    <record id="view_order_tree_delivery_note" model="ir.ui.view">
-        <field name="name">sale.order.tree.delivery.note</field>
+    <record id="view_order_tree_delivery_note_simplified" model="ir.ui.view">
+        <field name="name">sale.order.tree.delivery.note.simplified</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_tree"/>
         <field name="arch" type="xml">
@@ -68,8 +51,8 @@
     </record>
 
     <!-- Filtres de recherche -->
-    <record id="view_sales_order_search_delivery_note" model="ir.ui.view">
-        <field name="name">sale.order.search.delivery.note</field>
+    <record id="view_sales_order_search_delivery_note_simplified" model="ir.ui.view">
+        <field name="name">sale.order.search.delivery.note.simplified</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_sales_order_filter"/>
         <field name="arch" type="xml">
@@ -79,7 +62,7 @@
                 <separator/>
                 <filter name="with_delivery_notes"
                         string="Avec Bons de Livraison"
-                        domain="[('picking_ids.delivery_note_number', '!=', False)]"/>
+                        domain="[('picking_ids.picking_type_code', '=', 'outgoing'), ('picking_ids.state', '=', 'done')]"/>
                 <filter name="bl_partial"
                         string="BL Partiels"
                         domain="[('delivery_note_status', '=', 'partial')]"/>

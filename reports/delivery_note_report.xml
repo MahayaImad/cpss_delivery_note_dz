@@ -3,7 +3,7 @@
 
     <!-- Action de rapport pour les bons de livraison -->
     <record id="action_report_delivery_note" model="ir.actions.report">
-        <field name="name">Bon de Livraison</field>
+        <field name="name">Bon de Livraison avec TVA</field>
         <field name="model">stock.picking</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">cpss_delivery_note_dz.report_delivery_note_document</field>
@@ -11,7 +11,61 @@
         <field name="binding_model_id" ref="stock.model_stock_picking"/>
         <field name="binding_type">report</field>
         <field name="paperformat_id" ref="base.paperformat_euro"/>
-        <field name="print_report_name">'BL - %s' % (object.delivery_note_number or object.name)</field>
+        <field name="print_report_name">'BL - %s' % (object.name)</field>
+    </record>
+
+     <record id="action_report_delivery_note_ttc" model="ir.actions.report">
+        <field name="name">Bon de Livraison en TTC</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">cpss_delivery_note_dz.report_delivery_note_document_ttc</field>
+        <field name="report_file">cpss_delivery_note_dz.report_delivery_note_document_ttc</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="base.paperformat_euro"/>
+        <field name="print_report_name">'BL - %s' % (object.name)</field>
+    </record>
+
+    <record id="view_picking_form_conditional_reports" model="ir.ui.view">
+        <field name="name">stock.picking.form.conditional.reports</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Ajouter boutons conditionnels dans le header -->
+            <button name="button_validate" position="after">
+
+                <!-- Groupe de boutons pour BL (visible seulement si done et avec BL) -->
+                <div class="btn-group" role="group"
+                     attrs="{'invisible': ['|', '|', ('name', '=', False), ('state', '!=', 'done'), ('picking_type_code', '!=', 'outgoing')]}">
+
+                    <button name="action_print_bl_safe"
+                            type="object"
+                            string="Imprimer BL"
+                            class="btn-primary"
+                            help="Imprimer le bon de livraison original"/>
+
+                    <button name="action_print_bl_ttc_safe"
+                            type="object"
+                            string="Imprimer BL TTC"
+                            class="btn-info"
+                            help="Imprimer le bon de livraison TTC"/>
+                </div>
+
+                <!-- Message informatif si conditions non remplies -->
+                <div class="alert alert-info mt-2" role="alert"
+                     attrs="{'invisible': ['|', ('state', '=', 'done'), ('name', '!=', False)]}">
+                    <i class="fa fa-info-circle"/>
+                    <strong>Information:</strong>
+                    <span attrs="{'invisible': [('name', '!=', False)]}">
+                        Générez d'abord un bon de livraison, puis
+                    </span>
+                    terminez la livraison pour pouvoir imprimer les rapports.
+                </div>
+
+            </button>
+
+        </field>
     </record>
 
 </odoo>

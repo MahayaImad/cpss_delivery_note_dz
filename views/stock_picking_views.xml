@@ -1,55 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Extension du formulaire stock.picking -->
-    <record id="view_picking_form_bl" model="ir.ui.view">
-        <field name="name">stock.picking.form.bl</field>
+    <!-- Extension du formulaire stock.picking pour BL -->
+    <record id="view_picking_form_delivery_note_cpss" model="ir.ui.view">
+        <field name="name">stock.picking.form.delivery.note.cpss</field>
         <field name="model">stock.picking</field>
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
 
-            <!-- Bouton dans header -->
-            <button name="button_validate" position="after">
-                <button name="action_generate_delivery_note"
-                        type="object"
-                        string="Générer BL"
-                        class="btn-primary"
-                        attrs="{'invisible': ['|', ('picking_type_code', '!=', 'outgoing'), ('delivery_note_number', '!=', False)]}"/>
-            </button>
+     <!-- Enrichir le tree des move_ids_without_package avec colonnes financières -->
+            <xpath expr="//field[@name='move_ids_without_package']/tree" position="inside">
+                <field name="price_unit"
+                       string="Prix Unit."
+                       attrs="{'column_invisible': ['|', ('parent.picking_type_code', '!=', 'outgoing'), ('parent.state', '!=', 'done')]}"/>
+                <field name="discount"
+                       string="Remise %"
+                       attrs="{'column_invisible': ['|', ('parent.picking_type_code', '!=', 'outgoing'), ('parent.state', '!=', 'done')]}"/>
+                <field name="price_subtotal"
+                       string="Sous-total"
+                       attrs="{'column_invisible': ['|', ('parent.picking_type_code', '!=', 'outgoing'), ('parent.state', '!=', 'done')]}"/>
+                <field name="currency_id" invisible="1"/>
+            </xpath>
 
-            <!-- Champs après partner_id -->
-            <field name="partner_id" position="after">
-                <field name="delivery_note_number"/>
-                <field name="delivery_note_date"/>
-                <field name="is_delivery_note_printed"/>
-            </field>
+            <xpath expr="//sheet/notebook" position="after">
+
+                <group name="note_group" col="6" class="mt-2 mt-md-0">
+                    <group colspan="4"/>
+                    <group class="oe_subtotal_footer oe_right" colspan="2" name="sale_total"
+                        attrs="{'invisible': ['|', ('picking_type_code', '!=', 'outgoing'), ('state', '!=', 'done')]}">
+                        <field name="amount_untaxed" readonly="1" string="Montant HT"/>
+                        <field name="amount_tax" readonly="1" string="TVA"/>
+                        <field name="amount_total" readonly="1" string="Total TTC"/>
+                        <field name="currency_id" invisible="1"/>
+                    </group>
+                    <div class="clearfix"/>
+                </group>
+            </xpath>
 
         </field>
     </record>
 
-    <!-- Action simple pour les bons de livraison -->
-    <record id="action_delivery_notes" model="ir.actions.act_window">
+    <!-- Action pour les bons de livraison -->
+    <record id="action_delivery_notes_cpss" model="ir.actions.act_window">
         <field name="name">Bons de Livraison</field>
         <field name="res_model">stock.picking</field>
         <field name="view_mode">tree,form</field>
-        <field name="domain">[('picking_type_code', '=', 'outgoing'), ('delivery_note_number', '!=', False)]</field>
-        <field name="context">{
-            'default_picking_type_code': 'outgoing'
-        }</field>
+        <field name="domain">[('picking_type_code', '=', 'outgoing'), ('state', '=', 'done')]</field>
+        <field name="context">{}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Créer votre premier bon de livraison !
+                Aucun bon de livraison validé !
             </p>
             <p>
-                Les bons de livraison sont générés depuis les livraisons de commandes de vente.
+                Les bons de livraison apparaissent ici une fois les livraisons validées.
+                Utilisez le bouton "Imprimer BL" pour générer le rapport conforme.
             </p>
         </field>
     </record>
 
-    <menuitem id="menu_delivery_notes"
+    <!-- Filtres de recherche pour les BL -->
+    <record id="view_picking_search_delivery_note_cpss" model="ir.ui.view">
+        <field name="name">stock.picking.search.delivery.note.cpss</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_internal_search"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//filter[@name='late']" position="after">
+                <separator/>
+                <filter name="delivery_notes_cpss"
+                        string="Bons de Livraison"
+                        domain="[('picking_type_code', '=', 'outgoing'), ('state', '=', 'done')]"/>
+                <filter name="not_invoiced_cpss"
+                        string="BL Non Facturés"
+                        domain="[('picking_type_code', '=', 'outgoing'), ('state', '=', 'done'), ('sale_invoice_status', '!=', 'invoiced')]"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- Menu pour les bons de livraison -->
+    <menuitem id="menu_delivery_notes_cpss"
               name="Bons de Livraison"
               parent="sale.sale_menu_root"
-              action="action_delivery_notes"
+              action="action_delivery_notes_cpss"
               sequence="99"
               groups="stock.group_stock_user"/>
 

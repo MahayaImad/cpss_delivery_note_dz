@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 
 
 class StockPicking(models.Model):
@@ -46,6 +47,14 @@ class StockPicking(models.Model):
         currency_field='currency_id'
     )
 
+    # NOUVEAU : Champ pour le montant en lettres
+    amount_total_text = fields.Text(
+        string='Montant en lettres',
+        compute='_compute_amount_total_text',
+        store=True,
+        help="Montant total TTC en lettres"
+    )
+
     currency_id = fields.Many2one(
         'res.currency',
         string='Devise',
@@ -72,6 +81,34 @@ class StockPicking(models.Model):
                 picking.currency_id = picking.sale_id.currency_id
             else:
                 picking.currency_id = picking.company_id.currency_id
+
+    @api.depends('amount_total', 'currency_id')
+    def _compute_amount_total_text(self):
+        """Calcule le montant en lettres"""
+        for record in self:
+            record.amount_total_text = record.custom_amount_to_text(record.amount_total)
+
+    def custom_amount_to_text(self, montant):
+        """Convertit un montant en texte avec formatage spécifique pour l'Algérie"""
+        currency_id = self.currency_id or self.env.ref('base.DZD')
+
+        if not montant:
+            return "Zéro dinar algérien"
+
+        res = currency_id.amount_to_text(montant)
+
+        # Ajustements spécifiques pour l'Algérie
+        if round(montant % 1, 2) == 0.0:
+            res += " et zéro centime"
+
+        if montant > 1.0:
+            res = res.replace('Dinar', 'Dinars')
+
+        # Formatage pour l'Algérie
+        res = res.replace('Dinar Algérien', 'Dinar Algérien')
+        res = res.replace('Centimes', 'Centimes')
+
+        return res.lower().capitalize()
 
     @api.depends('move_ids_without_package.price_unit', 'move_ids_without_package.quantity_done',
                  'move_ids_without_package.product_id.taxes_id')
@@ -119,6 +156,28 @@ class StockPicking(models.Model):
             picking.amount_untaxed = amount_untaxed
             picking.amount_tax = amount_tax
             picking.amount_total = amount_untaxed + amount_tax
+
+    def action_print_bl_safe(self):
+        self.ensure_one()
+
+        if self.state != 'done':
+            raise UserError("Le bon de livraison ne peut être imprimé que lorsque la livraison est terminée.")
+
+        if not self.delivery_note_number:
+            raise UserError("Aucun numéro de bon de livraison généré. Veuillez d'abord générer le BL.")
+
+        return self.env.ref('cpss_delivery_note_dz.action_report_delivery_note_original').report_action(self)
+
+    def action_print_bl_ttc_safe(self):
+        self.ensure_one()
+
+        if self.state != 'done':
+            raise UserError("Le bon de livraison TTC ne peut être imprimé que lorsque la livraison est terminée.")
+
+        if not self.delivery_note_number:
+            raise UserError("Aucun numéro de bon de livraison généré. Veuillez d'abord générer le BL.")
+
+        return self.env.ref('cpss_delivery_note_dz.action_report_delivery_note_ttc').report_action(self)
 
     def action_generate_delivery_note(self):
         """Générer le numéro BL"""

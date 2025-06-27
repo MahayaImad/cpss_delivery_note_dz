@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    
+    <!-- Vue formulaire purchase.order avec BR (Bons de Réception) -->
+    <record id="view_purchase_order_form_receipt_note_simplified" model="ir.ui.view">
+        <field name="name">purchase.order.form.receipt.note.simplified</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Ajouter smart button pour les Bons de Réception -->
+            <div name="button_box" position="inside">
+                <button type="object"
+                        name="action_view_receipt_notes"
+                        class="oe_stat_button"
+                        icon="fa-truck"
+                        attrs="{'invisible': [('receipt_note_count', '=', 0)]}">
+                    <field name="receipt_note_count" widget="statinfo" string="Bons de Réception"/>
+                </button>
+            </div>
+
+            <!-- Ajouter les champs dans l'en-tête -->
+            <field name="partner_id" position="after">
+                <field name="receipt_note_status"
+                       attrs="{'invisible': [('receipt_note_count', '=', 0)]}"/>
+                <field name="payment_state_computed"
+                       string="État Paiement"/>
+            </field>
+
+            <!-- Enrichir les lignes de commande d'achat -->
+            <xpath expr="//field[@name='order_line']/tree//field[@name='qty_received']" position="after">
+                <field name="qty_received_br"
+                       string="Reçu (BR)"
+                       attrs="{'column_invisible': [('parent.receipt_note_count', '=', 0)]}"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- Vue liste purchase.order avec colonnes BR - CORRIGÉE -->
+    <record id="view_purchase_order_tree_receipt_note_simplified" model="ir.ui.view">
+        <field name="name">purchase.order.tree.receipt.note.simplified</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_tree"/>
+        <field name="arch" type="xml">
+
+            <!-- OPTION 1: Utiliser un champ existant dans la vue tree -->
+            <field name="amount_total" position="after">
+                <field name="receipt_note_count" optional="hide"/>
+                <field name="receipt_note_status" optional="show"/>
+                <field name="payment_state_computed" optional="show"/>
+            </field>
+
+        </field>
+    </record>
+
+    <!-- ALTERNATIVE: Vue liste purchase.order - Version sécurisée -->
+    <record id="view_purchase_order_tree_receipt_note_safe" model="ir.ui.view">
+        <field name="name">purchase.order.tree.receipt.note.safe</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_tree"/>
+        <field name="arch" type="xml">
+
+            <!-- Ajouter à la fin de la vue tree -->
+            <xpath expr="//tree" position="inside">
+                <field name="receipt_note_count" optional="hide"/>
+                <field name="receipt_note_status" optional="show"/>
+                <field name="payment_state_computed" optional="show"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- Filtres de recherche pour purchase.order -->
+    <record id="view_purchase_order_search_receipt_note_simplified" model="ir.ui.view">
+        <field name="name">purchase.order.search.receipt.note.simplified</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.view_purchase_order_filter"/>
+        <field name="arch" type="xml">
+
+            <!-- Ajouter les filtres après un filtre existant connu -->
+            <filter name="activities_exception" position="after">
+                <separator/>
+                <filter name="with_receipt_notes"
+                        string="Avec Bons de Réception"
+                        domain="[('picking_ids.picking_type_code', '=', 'incoming'), ('picking_ids.state', '=', 'done')]"/>
+                <filter name="br_partial"
+                        string="BR Partiels"
+                        domain="[('receipt_note_status', '=', 'partial')]"/>
+                <filter name="br_complete"
+                        string="BR Complets"
+                        domain="[('receipt_note_status', '=', 'done')]"/>
+                <separator/>
+                <filter name="not_paid_purchases"
+                        string="Achats Non Payés"
+                        domain="[('payment_state_computed', '=', 'not_paid')]"/>
+                <filter name="paid_purchases"
+                        string="Achats Payés"
+                        domain="[('payment_state_computed', '=', 'paid')]"/>
+            </filter>
+
+            <!-- Ajouter les groupes dans la section existante -->
+            <xpath expr="//group[@expand='0']" position="inside">
+                <filter string="État BR"
+                        name="groupby_receipt_note_status"
+                        domain="[]"
+                        context="{'group_by': 'receipt_note_status'}"/>
+                <filter string="État Paiement"
+                        name="groupby_payment_state"
+                        domain="[]"
+                        context="{'group_by': 'payment_state_computed'}"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- Menu pour les bons de réception -->
+    <record id="action_receipt_notes_cpss" model="ir.actions.act_window">
+        <field name="name">Bons de Réception</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('picking_type_code', '=', 'incoming')]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Aucun bon de réception validé !
+            </p>
+            <p>
+                Les bons de réception apparaissent ici une fois les réceptions validées.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu pour les bons de réception -->
+    <menuitem id="menu_receipt_notes_cpss"
+              name="Bons de Réception"
+              parent="purchase.menu_purchase_root"
+              action="action_receipt_notes_cpss"
+              sequence="99"
+              groups="stock.group_stock_user"/>
+
+</odoo>

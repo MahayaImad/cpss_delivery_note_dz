@@ -13,21 +13,38 @@
                     <div class="row">
                         <div class="col-6">
                             <h3>
-                                <span>BON DE LIVRAISON </span>
+                                <!-- TITRE DYNAMIQUE basé sur le type d'opération -->
+                                <span t-esc="doc._get_document_title_for_report()"/> <br />
                                 <span t-field="doc.name"/>
                             </h3>
+
                             <div id="informations" class="row mt-4 mb-4">
                                 <!-- Première ligne - informations du BL -->
                                 <div class="col-auto col-3 mw-100 mb-2" t-if="doc.date_done" name="date_livraison">
-                                    <strong>Date de Livraison:</strong>
+                                    <strong>
+                                        <!-- Label adaptatif -->
+                                        <t t-if="doc.picking_type_code == 'outgoing'">Date de Livraison:</t>
+                                        <t t-elif="doc.picking_type_code == 'incoming'">Date de Réception:</t>
+                                        <t t-else="">Date d'Opération:</t>
+                                    </strong>
                                     <p class="m-0" t-field="doc.date_done" t-options="{'widget': 'date'}"/>
                                 </div>
                                 <div t-if="doc.origin" class="col-auto col-3 mw-100 mb-2" name="div_origin">
-                                    <strong>Commande:</strong>
+                                    <strong>
+                                        <!-- Label adaptatif pour l'origine -->
+                                        <t t-if="doc.picking_type_code == 'outgoing'">Commande:</t>
+                                        <t t-elif="doc.picking_type_code == 'incoming'">Référence:</t>
+                                        <t t-else="">Origine:</t>
+                                    </strong>
                                     <p class="m-0" t-field="doc.origin"/>
                                 </div>
                                 <div class="col-auto col-3 mw-100 mb-2" t-if="doc.partner_id.ref" name="customer_code">
-                                    <strong>Code Client:</strong>
+                                    <strong>
+                                        <!-- Label adaptatif pour le partenaire -->
+                                        <t t-if="doc.picking_type_code == 'outgoing'">Code Client:</t>
+                                        <t t-elif="doc.picking_type_code == 'incoming'">Code Fournisseur:</t>
+                                        <t t-else="">Code Partenaire:</t>
+                                    </strong>
                                     <p class="m-0" t-field="doc.partner_id.ref"/>
                                 </div>
                             </div>
@@ -37,7 +54,16 @@
                         <div class="col-6"
                              style="width: 50%; border: 1px dotted #333; display: flex; align-items: center; justify-content: center; border-radius: 15px; padding: 20px;">
                             <h5 style="border-bottom: 1px dotted #333; width: 100%;">
-                                Client : <span t-field="doc.partner_id.name"/>
+                                <!-- Titre adaptatif pour le partenaire -->
+                                <t t-if="doc.picking_type_code == 'outgoing'">
+                                    Client : <span t-field="doc.partner_id.name"/>
+                                </t>
+                                <t t-elif="doc.picking_type_code == 'incoming'">
+                                    Fournisseur : <span t-field="doc.partner_id.name"/>
+                                </t>
+                                <t t-else="">
+                                    Partenaire : <span t-field="doc.partner_id.name"/>
+                                </t>
                             </h5>
                             <div class="custom-address">
                                 <div class="address-line" t-if="doc.partner_id.street">
@@ -339,8 +365,16 @@
                                 <tr style="border: 1px solid white;">
                                     <th style="border: 1px solid black; width:25%; font-size:13px;">
                                         <p style="padding-top:5px; text-align:center;">
-                                            Visa / Signature client: <br/>
                                         </p>
+                                         <t t-if="doc.picking_type_code == 'outgoing'">
+                                            Visa / Signature client: <br/>
+                                        </t>
+                                        <t t-elif="doc.picking_type_code == 'incoming'">
+                                            Visa / Signature fournisseur: <br/>
+                                        </t>
+                                        <t t-else="">
+                                            Visa / Signature: <br/>
+                                        </t>
                                     </th>
                                     <th style="width:50%;" />
                                     <th style="border: 1px solid black; width:25%; font-size:13px;">
@@ -382,21 +416,36 @@
                 <div class="row">
                     <div class="col-6">
                         <h3>
-                            <span>BON DE LIVRAISON </span>
+                            <span t-esc="doc._get_document_title_for_report()"/> <br />
                             <span t-field="doc.name"/>
                         </h3>
                         <div id="informations" class="row mt-4 mb-4">
                             <!-- Première ligne - informations du BL -->
                             <div class="col-auto col-3 mw-100 mb-2" t-if="doc.date_done" name="date_livraison">
-                                <strong>Date de Livraison:</strong>
+                                <strong>
+                                    <!-- Label adaptatif -->
+                                    <t t-if="doc.picking_type_code == 'outgoing'">Date de Livraison:</t>
+                                    <t t-elif="doc.picking_type_code == 'incoming'">Date de Réception:</t>
+                                    <t t-else="">Date d'Opération:</t>
+                                </strong>
                                 <p class="m-0" t-field="doc.date_done" t-options="{'widget': 'date'}"/>
                             </div>
                             <div t-if="doc.origin" class="col-auto col-3 mw-100 mb-2" name="div_origin">
-                                <strong>Commande:</strong>
+                                <strong>
+                                    <!-- Label adaptatif pour l'origine -->
+                                    <t t-if="doc.picking_type_code == 'outgoing'">Commande:</t>
+                                    <t t-elif="doc.picking_type_code == 'incoming'">Référence:</t>
+                                    <t t-else="">Origine:</t>
+                                </strong>
                                 <p class="m-0" t-field="doc.origin"/>
                             </div>
                             <div class="col-auto col-3 mw-100 mb-2" t-if="doc.partner_id.ref" name="customer_code">
-                                <strong>Code Client:</strong>
+                                <strong>
+                                    <!-- Label adaptatif pour le partenaire -->
+                                    <t t-if="doc.picking_type_code == 'outgoing'">Code Client:</t>
+                                    <t t-elif="doc.picking_type_code == 'incoming'">Code Fournisseur:</t>
+                                    <t t-else="">Code Partenaire:</t>
+                                </strong>
                                 <p class="m-0" t-field="doc.partner_id.ref"/>
                             </div>
                         </div>
@@ -406,7 +455,16 @@
                     <div class="col-6"
                          style="width: 50%; border: 1px dotted #333; display: flex; align-items: center; justify-content: center; border-radius: 15px; padding: 20px;">
                         <h5 style="border-bottom: 1px dotted #333; width: 100%;">
-                            Client : <span t-field="doc.partner_id.name"/>
+                            <!-- Titre adaptatif pour le partenaire -->
+                            <t t-if="doc.picking_type_code == 'outgoing'">
+                                Client : <span t-field="doc.partner_id.name"/>
+                            </t>
+                            <t t-elif="doc.picking_type_code == 'incoming'">
+                                Fournisseur : <span t-field="doc.partner_id.name"/>
+                            </t>
+                            <t t-else="">
+                                Partenaire : <span t-field="doc.partner_id.name"/>
+                            </t>
                         </h5>
                         <div class="custom-address">
                             <div class="address-line" t-if="doc.partner_id.street">
@@ -712,7 +770,15 @@
                                 <tr style="border: 1px solid white;">
                                     <th style="border: 1px solid black; width:25%; font-size:13px;">
                                         <p style="padding-top:5px; text-align:center;">
-                                            Visa / Signature client: <br/>
+                                            <t t-if="doc.picking_type_code == 'outgoing'">
+                                                Visa / Signature client: <br/>
+                                            </t>
+                                            <t t-elif="doc.picking_type_code == 'incoming'">
+                                                Visa / Signature fournisseur: <br/>
+                                            </t>
+                                            <t t-else="">
+                                                Visa / Signature: <br/>
+                                            </t>
                                         </p>
                                     </th>
                                     <th style="width:50%;" />

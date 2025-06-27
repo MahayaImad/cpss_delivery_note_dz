@@ -8,26 +8,32 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
 
-     <!-- Enrichir le tree des move_ids_without_package avec colonnes financières -->
+            <!-- Ajouter les champs nécessaires pour les conditions -->
+            <field name="state" position="after">
+                <field name="location_src_usage" invisible="1"/>
+                <field name="location_dest_usage" invisible="1"/>
+            </field>
+
+            <!-- Enrichir le tree des move_ids_without_package avec colonnes financières -->
             <xpath expr="//field[@name='move_ids_without_package']/tree" position="inside">
                 <field name="price_unit"
                        string="Prix Unit."
-                       attrs="{'column_invisible': ['|', ('parent.picking_type_code', '!=', 'outgoing'), ('parent.state', '!=', 'done')]}"/>
+                       attrs="{'column_invisible': [('parent.state', '!=', 'done')]}"/>
                 <field name="discount"
                        string="Remise %"
-                       attrs="{'column_invisible': ['|', ('parent.picking_type_code', '!=', 'outgoing'), ('parent.state', '!=', 'done')]}"/>
+                       attrs="{'column_invisible': [('parent.state', '!=', 'done')]}"/>
                 <field name="price_subtotal"
                        string="Sous-total"
-                       attrs="{'column_invisible': ['|', ('parent.picking_type_code', '!=', 'outgoing'), ('parent.state', '!=', 'done')]}"/>
+                       attrs="{'column_invisible': [('parent.state', '!=', 'done')]}"/>
                 <field name="currency_id" invisible="1"/>
             </xpath>
 
+            <!-- Ajouter les totaux -->
             <xpath expr="//sheet/notebook" position="after">
-
                 <group name="note_group" col="6" class="mt-2 mt-md-0">
                     <group colspan="4"/>
-                    <group class="oe_subtotal_footer oe_right" colspan="2" name="sale_total"
-                        attrs="{'invisible': ['|', ('picking_type_code', '!=', 'outgoing'), ('state', '!=', 'done')]}">
+                    <group class="oe_subtotal_footer oe_right" colspan="2" name="picking_total"
+                        attrs="{'invisible': [('state', '!=', 'done')]}">
                         <field name="amount_untaxed" readonly="1" string="Montant HT"/>
                         <field name="amount_tax" readonly="1" string="TVA"/>
                         <field name="amount_total" readonly="1" string="Total TTC"/>
@@ -37,8 +43,90 @@
                 </group>
             </xpath>
 
+            <!-- Boutons dynamiques -->
+            <xpath expr="//button[@name='button_validate']" position="after">
+
+                <!-- LIVRAISON NORMALE -->
+                <div attrs="{'invisible': ['|', ('state', '!=', 'done'), ('picking_type_code', '!=', 'outgoing')]}">
+
+                    <!-- Livraison Client -->
+                    <div attrs="{'invisible': ['|', ('location_src_usage', '!=', 'internal'), ('location_dest_usage', '!=', 'customer')]}">
+                        <button name="action_print_bl_dynamic"
+                                type="object"
+                                string="Imprimer BL en TVA"
+                                class="btn-primary"
+                                help="Imprimer le bon de livraison"/>
+
+                        <button name="action_print_bl_ttc_dynamic"
+                                type="object"
+                                string="Imprimer BL en TTC"
+                                class="btn-info"
+                                help="Imprimer le bon de livraison TTC"/>
+                    </div>
+
+                    <!-- Retour Fournisseur -->
+                    <div attrs="{'invisible': ['|', ('location_src_usage', '!=', 'internal'), ('location_dest_usage', '!=', 'supplier')]}">
+                        <button name="action_print_bl_dynamic"
+                                type="object"
+                                string="Imprimer BON DE RETOUR FOURNISSEUR"
+                                class="btn-primary"
+                                help="Imprimer le bon de retour fournisseur"/>
+                    </div>
+
+                </div>
+
+                <!-- RÉCEPTION -->
+                <div attrs="{'invisible': ['|', ('state', '!=', 'done'), ('picking_type_code', '!=', 'incoming')]}">
+
+                    <!-- Réception Fournisseur -->
+                    <div attrs="{'invisible': ['|', ('location_src_usage', '!=', 'supplier'), ('location_dest_usage', '!=', 'internal')]}">
+                        <button name="action_print_bl_dynamic"
+                                type="object"
+                                string="Imprimer BON DE RÉCEPTION"
+                                class="btn-primary"
+                                help="Imprimer le bon de réception"/>
+                    </div>
+
+                    <!-- Retour Client -->
+                    <div attrs="{'invisible': ['|', ('location_src_usage', '!=', 'customer'), ('location_dest_usage', '!=', 'internal')]}">
+                        <button name="action_print_bl_dynamic"
+                                type="object"
+                                string="Imprimer BON DE RETOUR CLIENT"
+                                class="btn-primary"
+                                help="Imprimer le bon de retour client"/>
+
+                        <button name="action_print_bl_ttc_dynamic"
+                                type="object"
+                                string="Imprimer BON DE RETOUR CLIENT TTC"
+                                class="btn-info"
+                                help="Imprimer le bon de retour client TTC"/>
+                    </div>
+
+                </div>
+
+                <!-- TRANSFERT INTERNE -->
+                <div attrs="{'invisible': ['|', ('state', '!=', 'done'), '|', ('picking_type_code', '!=', 'internal'), '|', ('location_src_usage', '!=', 'internal'), ('location_dest_usage', '!=', 'internal')]}">
+                    <button name="action_print_bl_dynamic"
+                            type="object"
+                            string="Imprimer BON DE TRANSFERT"
+                            class="btn-primary"
+                            help="Imprimer le bon de transfert"/>
+                </div>
+
+                <!-- CAS GÉNÉRIQUES (fallback) -->
+                <div attrs="{'invisible': ['|', ('state', '!=', 'done'), ('picking_type_code', 'in', ['outgoing', 'incoming', 'internal'])]}">
+                    <button name="action_print_bl_dynamic"
+                            type="object"
+                            string="Imprimer DOCUMENT LOGISTIQUE"
+                            class="btn-secondary"
+                            help="Imprimer le document"/>
+                </div>
+
+            </xpath>
+
         </field>
     </record>
+
 
     <!-- Action pour les bons de livraison -->
     <record id="action_delivery_notes_cpss" model="ir.actions.act_window">

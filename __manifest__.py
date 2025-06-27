@@ -39,11 +39,12 @@ Développé spécialement pour le marché algérien.
         #'data/sequence_data.xml',
         'views/stock_picking_views.xml',
         'views/sale_order_views.xml',
+        'views/purchase_order_views.xml',
         'reports/delivery_note_report.xml',
         'reports/delivery_note_template.xml',
     ],
     'demo': [],
     'installable': True,
     'auto_install': False,
-    'application': False,
+    'application': True,
 }

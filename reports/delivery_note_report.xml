@@ -1,71 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Action de rapport pour les bons de livraison -->
+    <!-- Désactiver l'ancien BL-->
+    <record id="stock.action_report_delivery" model="ir.actions.report">
+        <field name="binding_model_id" eval="False"/>
+    </record>
+
+    <!-- Créer le nouveau -->
+    <record id="action_report_bon_sortie_custom" model="ir.actions.report">
+        <field name="name">Quantité Commandée/Livrée</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">stock.report_deliveryslip</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="base.paperformat_euro"/>
+        <field name="print_report_name">'Quantité Commandée/Livrée - %s - %s' % (object.partner_id.name or '', object.name)</field>
+        <!-- Filtrer par type de picking si nécessaire -->
+        <field name="binding_view_types">form,tree</field>
+    </record>
+
+    <!-- Rapports originaux (renommés pour éviter conflits) -->
     <record id="action_report_delivery_note" model="ir.actions.report">
         <field name="name">Bon de Livraison avec TVA</field>
         <field name="model">stock.picking</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">cpss_delivery_note_dz.report_delivery_note_document</field>
         <field name="report_file">cpss_delivery_note_dz.report_delivery_note_document</field>
-        <field name="binding_model_id" ref="stock.model_stock_picking"/>
-        <field name="binding_type">report</field>
+        <!-- PAS de binding_model_id ici -->
         <field name="paperformat_id" ref="base.paperformat_euro"/>
         <field name="print_report_name">'BL - %s' % (object.name)</field>
     </record>
 
-     <record id="action_report_delivery_note_ttc" model="ir.actions.report">
+    <record id="action_report_delivery_note_ttc" model="ir.actions.report">
         <field name="name">Bon de Livraison en TTC</field>
         <field name="model">stock.picking</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">cpss_delivery_note_dz.report_delivery_note_document_ttc</field>
         <field name="report_file">cpss_delivery_note_dz.report_delivery_note_document_ttc</field>
-        <field name="binding_model_id" ref="stock.model_stock_picking"/>
-        <field name="binding_type">report</field>
+        <!-- PAS de binding_model_id ici -->
         <field name="paperformat_id" ref="base.paperformat_euro"/>
         <field name="print_report_name">'BL - %s' % (object.name)</field>
     </record>
 
-    <record id="view_picking_form_conditional_reports" model="ir.ui.view">
-        <field name="name">stock.picking.form.conditional.reports</field>
-        <field name="model">stock.picking</field>
-        <field name="inherit_id" ref="stock.view_picking_form"/>
-        <field name="arch" type="xml">
+    <!-- Actions serveur qui apparaissent dans le menu Imprimer -->
+    <record id="action_report_delivery_note_server" model="ir.actions.server">
+        <field name="name">Bon de Livraison avec TVA</field>
+        <field name="model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+        <field name="state">code</field>
+        <field name="code">
+# Vérifier que state = done
+if not all(r.state == 'done' for r in records):
+    raise UserError("Le bon de livraison ne peut être imprimé que lorsque la livraison est terminée.")
 
-            <!-- Ajouter boutons conditionnels dans le header -->
-            <button name="button_validate" position="after">
-
-                <!-- Groupe de boutons pour BL (visible seulement si done et avec BL) -->
-                <div class="btn-group" role="group"
-                     attrs="{'invisible': ['|', '|', ('name', '=', False), ('state', '!=', 'done'), ('picking_type_code', '!=', 'outgoing')]}">
-
-                    <button name="action_print_bl_safe"
-                            type="object"
-                            string="Imprimer BL"
-                            class="btn-primary"
-                            help="Imprimer le bon de livraison original"/>
-
-                    <button name="action_print_bl_ttc_safe"
-                            type="object"
-                            string="Imprimer BL TTC"
-                            class="btn-info"
-                            help="Imprimer le bon de livraison TTC"/>
-                </div>
-
-                <!-- Message informatif si conditions non remplies -->
-                <div class="alert alert-info mt-2" role="alert"
-                     attrs="{'invisible': ['|', ('state', '=', 'done'), ('name', '!=', False)]}">
-                    <i class="fa fa-info-circle"/>
-                    <strong>Information:</strong>
-                    <span attrs="{'invisible': [('name', '!=', False)]}">
-                        Générez d'abord un bon de livraison, puis
-                    </span>
-                    terminez la livraison pour pouvoir imprimer les rapports.
-                </div>
-
-            </button>
-
+# Imprimer le rapport
+action = env.ref('cpss_delivery_note_dz.action_report_delivery_note').report_action(records)
         </field>
     </record>
+
+    <record id="action_report_delivery_note_ttc_server" model="ir.actions.server">
+        <field name="name">Bon de Livraison en TTC</field>
+        <field name="model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+        <field name="state">code</field>
+        <field name="code">
+# Vérifier que state = done
+if not all(r.state == 'done' for r in records):
+    raise UserError("Le bon de livraison TTC ne peut être imprimé que lorsque la livraison est terminée.")
+
+# Imprimer le rapport TTC
+action = env.ref('cpss_delivery_note_dz.action_report_delivery_note_ttc').report_action(records)
+        </field>
+    </record>
+
 
 </odoo>

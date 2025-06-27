@@ -20,31 +20,23 @@ class StockPicking(models.Model):
         help="Date de génération du bon de livraison"
     )
 
-    is_delivery_note_printed = fields.Boolean(
-        string='BL Imprimé',
-        default=False
-    )
-
     # Champs calculés pour les totaux (utilisés dans le rapport)
     amount_untaxed = fields.Monetary(
         string='Montant HT',
-        compute='_compute_amounts',
-        store=True,
-        currency_field='currency_id'
+        currency_field='currency_id',
+        default=0.0
     )
 
     amount_tax = fields.Monetary(
         string='TVA',
-        compute='_compute_amounts',
-        store=True,
-        currency_field='currency_id'
+        currency_field='currency_id',
+        default=0.0
     )
 
     amount_total = fields.Monetary(
         string='Total TTC',
-        compute='_compute_amounts',
-        store=True,
-        currency_field='currency_id'
+        currency_field='currency_id',
+        default=0.0
     )
 
     # NOUVEAU : Champ pour le montant en lettres
@@ -69,9 +61,210 @@ class StockPicking(models.Model):
     )
 
     sale_payment_state = fields.Selection(
-        related='sale_id.payment_state_computed',
+        related='sale_id.invoice_status',
         string='État Paiement'
     )
+
+    # Champs pour les conditions d'affichage dans la vue
+    location_src_usage = fields.Selection(
+        related='location_id.usage',
+        string='Source Location Usage',
+        store=True,
+        readonly=True
+    )
+
+    location_dest_usage = fields.Selection(
+        related='location_dest_id.usage',
+        string='Destination Location Usage',
+        store=True,
+        readonly=True
+    )
+
+    # Champs calculés pour l'affichage dynamique des boutons
+    document_title_display = fields.Char(
+        string='Titre du Document',
+        compute='_compute_document_titles',
+        help="Titre dynamique du document basé sur le type d'opération"
+    )
+
+    document_title_ttc_display = fields.Char(
+        string='Titre du Document TTC',
+        compute='_compute_document_titles',
+        help="Titre dynamique du document TTC"
+    )
+
+    @api.depends('picking_type_code', 'location_src_usage', 'location_dest_usage', 'state')
+    def _compute_document_titles(self):
+        """Calcule les titres dynamiques pour les boutons"""
+        for picking in self:
+            # Titre de base
+            base_title = picking._get_document_title_for_report()
+            picking.document_title_display = base_title
+
+            # Titre TTC
+            if "LIVRAISON" in base_title:
+                picking.document_title_ttc_display = base_title.replace("LIVRAISON", "LIVRAISON TTC")
+            elif "RETOUR" in base_title:
+                picking.document_title_ttc_display = base_title + " TTC"
+            elif "RÉCEPTION" in base_title:
+                picking.document_title_ttc_display = base_title + " TTC"
+            else:
+                picking.document_title_ttc_display = base_title + " TTC"
+
+    def action_print_bl_dynamic(self):
+        """Imprimer BL avec titre dynamique"""
+        self.ensure_one()
+
+        if self.state != 'done':
+            raise UserError("Le document ne peut être imprimé que lorsque l'opération est terminée.")
+
+        # Titre dynamique pour notification
+        document_title = self._get_document_title_for_report()
+
+        # Message de confirmation
+        message = f"Impression du {document_title} en cours..."
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Impression',
+                'message': message,
+                'type': 'success',
+                'next': self.env.ref('cpss_delivery_note_dz.action_report_delivery_note').report_action(self)
+            }
+        }
+
+    def action_print_bl_ttc_dynamic(self):
+        """Imprimer BL TTC avec titre dynamique"""
+        self.ensure_one()
+
+        if self.state != 'done':
+            raise UserError("Le document TTC ne peut être imprimé que lorsque l'opération est terminée.")
+
+        if self.picking_type_code != 'outgoing':
+            raise UserError("Le rapport TTC n'est disponible que pour les opérations sortantes.")
+
+        # Titre dynamique TTC
+        base_title = self._get_document_title_for_report()
+        if "LIVRAISON" in base_title:
+            ttc_title = base_title.replace("LIVRAISON", "LIVRAISON TTC")
+        elif "RETOUR" in base_title:
+            ttc_title = base_title + " TTC"
+        else:
+            ttc_title = base_title + " TTC"
+
+        # Message de confirmation
+        message = f"Impression du {ttc_title} en cours..."
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Impression TTC',
+                'message': message,
+                'type': 'success',
+                'next': self.env.ref('cpss_delivery_note_dz.action_report_delivery_note_ttc').report_action(self)
+            }
+        }
+
+    def _get_operation_type_name(self):
+        """Retourne le nom du type d'opération en français"""
+        operation_names = {
+            'incoming': 'Réception',
+            'outgoing': 'Livraison',
+            'internal': 'Transfert Interne',
+        }
+
+        # Cas spéciaux pour les retours
+        if self.location_id.usage == 'customer' and self.location_dest_id.usage == 'internal':
+            return 'Retour Client'
+        elif self.location_id.usage == 'internal' and self.location_dest_id.usage == 'supplier':
+            return 'Retour Fournisseur'
+
+        return operation_names.get(self.picking_type_code, 'Document')
+
+    def _get_dynamic_report_name(self):
+        """Génère le nom du rapport basé sur le type d'opération"""
+        self.ensure_one()
+
+        operation_name = self._get_operation_type_name()
+        partner_name = self.partner_id.name or 'Inconnu'
+
+        # Format : "Type Opération - Partenaire - Référence"
+        return f"{operation_name} - {partner_name} - {self.name}"
+
+    def _get_bl_report_name(self):
+        """Génère le nom du BL selon le type d'opération"""
+        self.ensure_one()
+
+        if self.picking_type_code == 'outgoing':
+            if self.location_id.usage == 'internal' and self.location_dest_id.usage == 'customer':
+                return f"BL Livraison - {self.name}"
+            else:
+                return f"BL Sortie - {self.name}"
+
+        elif self.picking_type_code == 'incoming':
+            if self.location_id.usage == 'customer' and self.location_dest_id.usage == 'internal':
+                return f"BL Retour Client - {self.name}"
+            else:
+                return f"BL Réception - {self.name}"
+
+        elif self.picking_type_code == 'internal':
+            return f"BL Transfert - {self.name}"
+
+        else:
+            return f"BL - {self.name}"
+
+    def _get_bl_ttc_report_name(self):
+        """Génère le nom du BL TTC selon le type d'opération"""
+        self.ensure_one()
+
+        base_name = self._get_bl_report_name()
+        return base_name.replace('BL', 'BL TTC')
+
+    def _get_document_title_for_report(self):
+        """Retourne le titre du document pour l'affichage dans le rapport"""
+        self.ensure_one()
+
+        # 1. RETOUR CLIENT (incoming : customer -> internal)
+        if (self.picking_type_code == 'incoming' and
+                self.location_id.usage == 'customer' and
+                self.location_dest_id.usage == 'internal'):
+            return 'BON DE RETOUR CLIENT'
+
+        # 2. RETOUR FOURNISSEUR (outgoing : internal -> supplier)
+        elif (self.picking_type_code == 'outgoing' and
+              self.location_id.usage == 'internal' and
+              self.location_dest_id.usage == 'supplier'):
+            return 'BON DE RETOUR FOURNISSEUR'
+
+        # 3. LIVRAISON NORMALE (outgoing : internal -> customer)
+        elif (self.picking_type_code == 'outgoing' and
+              self.location_id.usage == 'internal' and
+              self.location_dest_id.usage == 'customer'):
+            return 'BON DE LIVRAISON'
+
+        # 4. RÉCEPTION NORMALE (incoming : supplier -> internal)
+        elif (self.picking_type_code == 'incoming' and
+              self.location_id.usage == 'supplier' and
+              self.location_dest_id.usage == 'internal'):
+            return 'BON DE RÉCEPTION'
+
+        # 5. TRANSFERT INTERNE
+        elif (self.picking_type_code == 'internal' and
+              self.location_id.usage == 'internal' and
+              self.location_dest_id.usage == 'internal'):
+            return 'BON DE TRANSFERT'
+
+        # 6. CAS GÉNÉRIQUES (fallback basé sur picking_type_code)
+        elif self.picking_type_code == 'outgoing':
+            return 'BON DE SORTIE'
+        elif self.picking_type_code == 'incoming':
+            return 'BON D\'ENTRÉE'
+        elif self.picking_type_code == 'internal':
+            return 'BON DE TRANSFERT'
+
+        # 7. FALLBACK ULTIME
+        return 'DOCUMENT LOGISTIQUE'
 
     @api.depends('company_id', 'sale_id.currency_id')
     def _compute_currency_id(self):
@@ -109,6 +302,45 @@ class StockPicking(models.Model):
         res = res.replace('Centimes', 'Centimes')
 
         return res.lower().capitalize()
+
+    def button_validate(self):
+        """Override pour calculer les montants après validation"""
+        res = super().button_validate()
+
+        # Calculer les montants pour les pickings validés
+        for picking in self:
+            if picking.state == 'done' and picking.picking_type_code in ['outgoing', 'incoming']:
+                picking._compute_financial_amounts()
+
+        return res
+
+    def _compute_financial_amounts(self):
+        """Calcule les montants sans @api.depends"""
+        amount_untaxed = 0.0
+        amount_tax = 0.0
+
+        for move in self.move_ids_without_package:
+            if move.state == 'cancel':
+                continue
+            qty = move.quantity_done or move.product_uom_qty
+            price_unit = move.sale_line_id.price_unit if move.sale_line_id else move.product_id.list_price
+            discount = move.sale_line_id.discount if move.sale_line_id else 0.0
+
+            price_after_discount = price_unit * (1 - discount / 100.0)
+            line_total = qty * price_after_discount
+            amount_untaxed += line_total
+
+            if move.product_id.taxes_id:
+                tax_results = move.product_id.taxes_id.compute_all(
+                    price_after_discount, self.currency_id, qty, move.product_id, self.partner_id
+                )
+                amount_tax += sum(tax['amount'] for tax in tax_results['taxes'])
+
+        self.write({
+            'amount_untaxed': amount_untaxed,
+            'amount_tax': amount_tax,
+            'amount_total': amount_untaxed + amount_tax,
+        })
 
     @api.depends('move_ids_without_package.price_unit', 'move_ids_without_package.quantity_done',
                  'move_ids_without_package.product_id.taxes_id')
@@ -157,56 +389,6 @@ class StockPicking(models.Model):
             picking.amount_tax = amount_tax
             picking.amount_total = amount_untaxed + amount_tax
 
-    def action_print_bl_safe(self):
-        self.ensure_one()
-
-        if self.state != 'done':
-            raise UserError("Le bon de livraison ne peut être imprimé que lorsque la livraison est terminée.")
-
-        if not self.delivery_note_number:
-            raise UserError("Aucun numéro de bon de livraison généré. Veuillez d'abord générer le BL.")
-
-        return self.env.ref('cpss_delivery_note_dz.action_report_delivery_note_original').report_action(self)
-
-    def action_print_bl_ttc_safe(self):
-        self.ensure_one()
-
-        if self.state != 'done':
-            raise UserError("Le bon de livraison TTC ne peut être imprimé que lorsque la livraison est terminée.")
-
-        if not self.delivery_note_number:
-            raise UserError("Aucun numéro de bon de livraison généré. Veuillez d'abord générer le BL.")
-
-        return self.env.ref('cpss_delivery_note_dz.action_report_delivery_note_ttc').report_action(self)
-
-    def action_generate_delivery_note(self):
-        """Générer le numéro BL"""
-        for picking in self:
-            if not picking.delivery_note_number and picking.picking_type_code == 'outgoing':
-                # Générer le numéro
-                sequence = self.env['ir.sequence'].next_by_code('cpss.delivery.note')
-                if sequence:
-                    picking.delivery_note_number = sequence
-                else:
-                    # Fallback
-                    year = fields.Date.today().year
-                    picking.delivery_note_number = f"BL/{year}/{picking.id:05d}"
-
-                # Enregistrer la date de génération
-                picking.delivery_note_date = fields.Datetime.now()
-
-                # Marquer comme imprimé
-                picking.is_delivery_note_printed = True
-
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': 'Succès',
-                'message': 'Bon de livraison généré !',
-                'type': 'success',
-            }
-        }
 
 
 class StockMove(models.Model):

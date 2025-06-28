@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ======================================= -->
+    <!-- DASHBOARD ET VUES DE SYNTHÈSE DES BL   -->
+    <!-- ======================================= -->
+
+    <!-- Vue Dashboard pour BL Vente -->
+    <record id="view_bl_vente_dashboard" model="ir.ui.view">
+        <field name="name">bl.vente.dashboard</field>
+        <field name="model">stock.picking</field>
+        <field name="arch" type="xml">
+            <form string="Dashboard BL Vente" create="false" edit="false">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Dashboard Bons de Livraison Vente</h1>
+                    </div>
+
+                    <!-- KPIs en haut -->
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h4>Total BL</h4>
+                                    <h2 id="total_bl_count">-</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h4>CA Total TTC</h4>
+                                    <h2 id="total_ca">- DA</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h4>À Facturer</h4>
+                                    <h2 id="to_invoice_count">-</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h4>Retours</h4>
+                                    <h2 id="retours_count">-</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions rapides -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h3>Actions Rapides</h3>
+                            <div class="btn-group" role="group">
+                                <button type="object" name="action_view_bl_vente_all"
+                                        class="btn btn-primary">Tous les BL Vente</button>
+                                <button type="object" name="action_view_bl_to_invoice"
+                                        class="btn btn-warning">BL à Facturer</button>
+                                <button type="object" name="action_view_retours_clients"
+                                        class="btn btn-info">Retours Clients</button>
+                                <button type="object" name="action_view_bl_today"
+                                        class="btn btn-success">BL Aujourd'hui</button>
+                            </div>
+                        </div>
+                    </div>
+                </sheet>
+
+                <script type="text/javascript">
+                    // JavaScript pour charger les KPIs
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Simulation des données - à remplacer par un appel RPC
+                        document.getElementById('total_bl_count').textContent = '150';
+                        document.getElementById('total_ca').textContent = '2.500.000';
+                        document.getElementById('to_invoice_count').textContent = '25';
+                        document.getElementById('retours_count').textContent = '8';
+                    });
+                </script>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue Dashboard pour BR Achat -->
+    <record id="view_br_achat_dashboard" model="ir.ui.view">
+        <field name="name">br.achat.dashboard</field>
+        <field name="model">stock.picking</field>
+        <field name="arch" type="xml">
+            <form string="Dashboard BR Achat" create="false" edit="false">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Dashboard Bons de Réception Achat</h1>
+                    </div>
+
+                    <!-- KPIs en haut -->
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h4>Total BR</h4>
+                                    <h2 id="total_br_count">-</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h4>Achats Total TTC</h4>
+                                    <h2 id="total_achats">- DA</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h4>À Facturer</h4>
+                                    <h2 id="br_to_invoice_count">-</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <h4>Retours Fournisseurs</h4>
+                                    <h2 id="retours_fournisseurs_count">-</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions rapides -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h3>Actions Rapides</h3>
+                            <div class="btn-group" role="group">
+                                <button type="object" name="action_view_br_achat_all"
+                                        class="btn btn-primary">Tous les BR Achat</button>
+                                <button type="object" name="action_view_br_to_invoice"
+                                        class="btn btn-warning">BR à Facturer</button>
+                                <button type="object" name="action_view_retours_fournisseurs"
+                                        class="btn btn-danger">Retours Fournisseurs</button>
+                                <button type="object" name="action_view_br_today"
+                                        class="btn btn-success">BR Aujourd'hui</button>
+                            </div>
+                        </div>
+                    </div>
+                </sheet>
+
+                <script type="text/javascript">
+                    // JavaScript pour charger les KPIs
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Simulation des données - à remplacer par un appel RPC
+                        document.getElementById('total_br_count').textContent = '89';
+                        document.getElementById('total_achats').textContent = '1.750.000';
+                        document.getElementById('br_to_invoice_count').textContent = '12';
+                        document.getElementById('retours_fournisseurs_count').textContent = '3';
+                    });
+                </script>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vue Calendar pour les BL -->
+    <record id="view_delivery_note_calendar" model="ir.ui.view">
+        <field name="name">delivery.note.calendar</field>
+        <field name="model">stock.picking</field>
+        <field name="arch" type="xml">
+            <calendar string="Calendrier des BL"
+                      date_start="date_done"
+                      color="operation_type"
+                      quick_add="false"
+                      event_open_popup="true">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="amount_total_computed"/>
+                <field name="operation_type"/>
+                <field name="document_title_display"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- Actions pour les dashboards -->
+    <record id="action_bl_vente_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboard BL Vente</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_bl_vente_dashboard"/>
+        <field name="target">current</field>
+        <field name="context">{}</field>
+    </record>
+
+    <record id="action_br_achat_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboard BR Achat</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_br_achat_dashboard"/>
+        <field name="target">current</field>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- Vue Gantt pour la planification -->
+    <record id="view_delivery_note_gantt" model="ir.ui.view">
+        <field name="name">delivery.note.gantt</field>
+        <field name="model">stock.picking</field>
+        <field name="arch" type="xml">
+            <gantt string="Planning des Livraisons"
+                   date_start="scheduled_date"
+                   date_stop="date_done"
+                   default_group_by="partner_id"
+                   color="operation_type">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="amount_total_computed"/>
+                <field name="state"/>
+            </gantt>
+        </field>
+    </record>
+
+    <!-- Actions pour les filtres rapides BL Vente -->
+    <record id="action_bl_vente_to_invoice" model="ir.actions.act_window">
+        <field name="name">BL Vente à Facturer</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="domain">[
+            ('operation_type', 'in', ['livraison_client', 'retour_client']),
+            ('state', '=', 'done'),
+            ('sale_invoice_status', '=', 'to invoice')
+        ]</field>
+        <field name="context">{'search_default_group_partner': 1}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_delivery_note_tree_vente')}),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_delivery_note_kanban_vente')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_picking_form_delivery_note_cpss')})
+        ]"/>
+    </record>
+
+    <record id="action_bl_vente_today" model="ir.actions.act_window">
+        <field name="name">BL Vente Aujourd'hui</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="domain">[
+            ('operation_type', 'in', ['livraison_client', 'retour_client']),
+            ('state', '=', 'done'),
+            ('date_done', '&gt;=', context_today().strftime('%Y-%m-%d')),
+            ('date_done', '&lt;', (context_today() + relativedelta(days=1)).strftime('%Y-%m-%d'))
+        ]</field>
+        <field name="context">{'search_default_group_partner': 1}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_delivery_note_tree_vente')}),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_delivery_note_kanban_vente')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_picking_form_delivery_note_cpss')})
+        ]"/>
+    </record>
+
+    <!-- Actions pour les filtres rapides BR Achat -->
+    <record id="action_br_achat_to_invoice" model="ir.actions.act_window">
+        <field name="name">BR Achat à Facturer</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="domain">[
+            ('operation_type', 'in', ['reception_fournisseur', 'retour_fournisseur']),
+            ('state', '=', 'done'),
+            ('purchase_invoice_status', '=', 'to invoice')
+        ]</field>
+        <field name="context">{'search_default_group_partner': 1}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_receipt_note_tree_achat')}),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_receipt_note_kanban_achat')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_picking_form_delivery_note_cpss')})
+        ]"/>
+    </record>
+
+    <record id="action_br_achat_today" model="ir.actions.act_window">
+        <field name="name">BR Achat Aujourd'hui</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="domain">[
+            ('operation_type', 'in', ['reception_fournisseur', 'retour_fournisseur']),
+            ('state', '=', 'done'),
+            ('date_done', '&gt;=', context_today().strftime('%Y-%m-%d')),
+            ('date_done', '&lt;', (context_today() + relativedelta(days=1)).strftime('%Y-%m-%d'))
+        ]</field>
+        <field name="context">{'search_default_group_partner': 1}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_receipt_note_tree_achat')}),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_receipt_note_kanban_achat')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_picking_form_delivery_note_cpss')})
+        ]"/>
+    </record>
+
+    <!-- Vue Activity pour le suivi -->
+    <record id="view_delivery_note_activity" model="ir.ui.view">
+        <field name="name">delivery.note.activity</field>
+        <field name="model">stock.picking</field>
+        <field name="arch" type="xml">
+            <activity string="Activités BL">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="amount_total_computed"/>
+                <field name="operation_type"/>
+                <templates>
+                    <div t-name="activity-box">
+                        <div class="o_card_header">
+                            <field name="name"/>
+                            <span class="float-right">
+                                <field name="amount_total_computed" widget="monetary"/> DA
+                            </span>
+                        </div>
+                        <div class="o_card_content">
+                            <field name="partner_id"/>
+                            <br/>
+                            <span class="badge" t-att-class="record.operation_type.value == 'livraison_client' ? 'badge-success' :
+                                                         record.operation_type.value == 'retour_client' ? 'badge-warning' :
+                                                         record.operation_type.value == 'reception_fournisseur' ? 'badge-info' : 'badge-danger'">
+                                <t t-esc="record.operation_type.value"/>
+                            </span>
+                        </div>
+                    </div>
+                </templates>
+            </activity>
+        </field>
+    </record>
+
+    <!-- Vue cohort pour l'analyse -->
+    <record id="view_delivery_note_cohort" model="ir.ui.view">
+        <field name="name">delivery.note.cohort</field>
+        <field name="model">stock.picking</field>
+        <field name="arch" type="xml">
+            <cohort string="Analyse de Cohorte BL"
+                    date_start="date_done"
+                    date_stop="date_done"
+                    interval="week"
+                    measure="amount_total_computed">
+                <field name="partner_id"/>
+            </cohort>
+        </field>
+    </record>
+
+    <!-- Mise à jour des menus avec liens vers dashboards -->
+    <menuitem id="menu_bl_vente_dashboard"
+              name="📊 Dashboard Vente"
+              parent="menu_delivery_notes_vente_root"
+              action="action_bl_vente_dashboard"
+              sequence="0"/>
+
+    <menuitem id="menu_br_achat_dashboard"
+              name="📊 Dashboard Achat"
+              parent="menu_receipt_notes_achat_root"
+              action="action_br_achat_dashboard"
+              sequence="0"/>
+
+    <!-- Actions rapides dans les sous-menus -->
+    <menuitem id="menu_bl_vente_to_invoice"
+              name="🔔 À Facturer"
+              parent="menu_delivery_notes_vente_root"
+              action="action_bl_vente_to_invoice"
+              sequence="4"/>
+
+    <menuitem id="menu_bl_vente_today"
+              name="📅 Aujourd'hui"
+              parent="menu_delivery_notes_vente_root"
+              action="action_bl_vente_today"
+              sequence="5"/>
+
+    <menuitem id="menu_br_achat_to_invoice"
+              name="🔔 À Facturer"
+              parent="menu_receipt_notes_achat_root"
+              action="action_br_achat_to_invoice"
+              sequence="4"/>
+
+    <menuitem id="menu_br_achat_today"
+              name="📅 Aujourd'hui"
+              parent="menu_receipt_notes_achat_root"
+              action="action_br_achat_today"
+              sequence="5"/>
+
+    <!-- Menu global pour vue consolidée -->
+    <record id="action_all_bl_consolidated" model="ir.actions.act_window">
+        <field name="name">Tous les Documents Logistiques</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">tree,kanban,calendar,gantt,pivot,graph,activity,cohort</field>
+        <field name="domain">[
+            ('operation_type', 'in', ['livraison_client', 'retour_client', 'reception_fournisseur', 'retour_fournisseur']),
+            ('state', '=', 'done')
+        ]</field>
+        <field name="context">{
+            'search_default_this_month': 1,
+            'search_default_group_type': 1
+        }</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_delivery_note_tree_vente')}),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_delivery_note_kanban_vente')}),
+            (0, 0, {'view_mode': 'calendar', 'view_id': ref('view_delivery_note_calendar')}),
+            (0, 0, {'view_mode': 'gantt', 'view_id': ref('view_delivery_note_gantt')}),
+            (0, 0, {'view_mode': 'pivot', 'view_id': ref('view_delivery_note_pivot_vente')}),
+            (0, 0, {'view_mode': 'graph', 'view_id': ref('view_delivery_note_graph_vente')}),
+            (0, 0, {'view_mode': 'activity', 'view_id': ref('view_delivery_note_activity')}),
+            (0, 0, {'view_mode': 'cohort', 'view_id': ref('view_delivery_note_cohort')})
+        ]"/>
+        <field name="search_view_id" ref="view_delivery_note_search_vente"/>
+    </record>
+
+    <!-- Menu consolidé dans Inventaire -->
+    <menuitem id="menu_all_bl_consolidated"
+              name="📋 Documents Logistiques CPSS"
+              parent="stock.menu_stock_root"
+              action="action_all_bl_consolidated"
+              sequence="99"
+              groups="stock.group_stock_manager"/>
+
+</odoo>

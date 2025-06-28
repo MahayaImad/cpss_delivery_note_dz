@@ -7,19 +7,38 @@
 CPSS - Bon de Livraison Algérie
 ===============================
 
-Module développé par CPSS pour la gestion des bons de livraison conformes à la spécificité algérienne.
+Module développé par CPSS pour la gestion des bons de livraison conformes à la réglementation algérienne.
 
-Fonctionnalités :
-* Numérotation spécifique des BL (BL/YYYY/XXXXX)
-* Calcul des montants basés sur les quantités livrées
-* Suivi des états d'impression et de livraison
-* Intégration avec les commandes de vente
-* Rapports personnalisés pour l'Algérie
+✅ **Fonctionnalités Principales :**
+• Livraisons clients et retours clients
+• Réceptions fournisseurs et retours fournisseurs  
+• Calculs automatiques des montants (retours en négatif)
+• Rapports PDF conformes (avec/sans TVA)
+• Vues complètes : Tree, Kanban, Pivot, Graph
+• Filtres avancés et groupements intelligents
+• Intégration sale.order et purchase.order
 
-Phase 1 : BL depuis commandes de vente
-Phase 2 : BL autonomes avec paiement direct (à venir)
+✅ **Vues Disponibles :**
+• **14 vues BL Vente** : Tree avec totaux, Kanban, Pivot, Graph, etc.
+• **14 vues BR Achat** : Tree avec totaux, Kanban, Pivot, Graph, etc.
+• **Menus organisés** : Vente, Achat, Global consolidé
+• **Actions rapides** : À facturer, Aujourd'hui, par type
 
-Développé spécialement pour le marché algérien.
+✅ **Conformité Algérienne :**
+• Format BL réglementaire DZ
+• Montants en lettres (Dinars Algériens)  
+• Zones de signature obligatoires
+• Informations légales complètes
+
+📊 **Dashboard disponible** : Module complémentaire "CPSS Dashboard BL"
+🔧 **Support** : support@cpss.dz
+
+Phase 2 (Prochainement) :
+=========================
+🔄 BL autonomes (sans commande préalable)
+🔄 Paiement direct des BL (vente cash)
+🔄 Facturation optionnelle depuis BL
+
     """,
     'contributors': [
             'Cedar Peak Systems & Solutions Team',
@@ -32,14 +51,27 @@ Développé spécialement pour le marché algérien.
         'sale',
         'stock',
         'sale_stock',
+        'purchase',
+        'purchase_stock',
         'account',
     ],
     'data': [
+        # Sécurité
         'security/ir.model.access.csv',
-        #'data/sequence_data.xml',
+
+        # Données de base
+        # 'data/sequence_data.xml',  # Désactivé
+
+        # Vues principales
         'views/stock_picking_views.xml',
         'views/sale_order_views.xml',
         'views/purchase_order_views.xml',
+
+        # Nouvelles vues étendues
+        'views/delivery_note_vente_views.xml',  # Vues BL Vente complètes
+        'views/receipt_note_achat_views.xml',  # Vues BR Achat complètes
+
+        # Rapports
         'reports/delivery_note_report.xml',
         'reports/delivery_note_template.xml',
     ],
@@ -47,4 +79,10 @@ Développé spécialement pour le marché algérien.
     'installable': True,
     'auto_install': False,
     'application': True,
+    'sequence': 10,
+    'images': [
+        'static/description/banner.png',
+        'static/description/icon.png',
+    ],
+    'post_init_hook': '_post_init_hook',  # Hook pour configuration initiale
 }
